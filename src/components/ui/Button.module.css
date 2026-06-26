@@ -1,0 +1,55 @@
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-body);
+  font-weight: 500;
+  font-size: 1rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 9999px; /* Pill shape */
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: center;
+}
+
+.button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.primary {
+  background-color: var(--color-accent-green);
+  color: var(--color-white);
+}
+
+.primary:hover:not(:disabled) {
+  background-color: #148f41;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.2);
+}
+
+.secondary {
+  background-color: var(--color-matte-black);
+  color: var(--color-white);
+}
+
+.secondary:hover:not(:disabled) {
+  background-color: #222222;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(17, 17, 17, 0.2);
+}
+
+.outline {
+  background-color: transparent;
+  color: var(--color-matte-black);
+  border-color: #E5E5E5;
+}
+
+.outline:hover:not(:disabled) {
+  border-color: var(--color-matte-black);
+}

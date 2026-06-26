@@ -1,0 +1,113 @@
+.page {
+  padding: 6rem 1.5rem;
+  background-color: var(--color-white);
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 4rem;
+}
+
+.title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 768px) {
+  .title { font-size: 3rem; }
+}
+
+.subtitle {
+  color: #525252;
+  font-size: 1.125rem;
+  max-width: 700px;
+  margin: 0 auto;
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: 4rem;
+}
+
+.imageGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .imageGrid {
+    grid-template-columns: 2fr 1fr;
+  }
+}
+
+.imageWrapper {
+  position: relative;
+  background-color: var(--color-light-gray);
+  border-radius: 24px;
+  overflow: hidden;
+  aspect-ratio: 16 / 9;
+}
+
+@media (min-width: 768px) {
+  .imgMain { aspect-ratio: 4 / 3; }
+  .imgSecondary { aspect-ratio: 3 / 4; }
+}
+
+.image {
+  object-fit: cover;
+  padding: 4rem;
+}
+
+.textSection h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  letter-spacing: -0.01em;
+}
+
+.textSection p {
+  color: #525252;
+  font-size: 1.125rem;
+  line-height: 1.7;
+  margin-bottom: 1.5rem;
+}
+
+.valuesList {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 2rem 0;
+}
+
+.valuesList li {
+  color: #525252;
+  font-size: 1.125rem;
+  line-height: 1.7;
+  margin-bottom: 1rem;
+  padding-left: 1.5rem;
+  position: relative;
+}
+
+.valuesList li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.6rem;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--color-accent-green);
+}
+
+.valuesList strong {
+  color: var(--color-matte-black);
+}

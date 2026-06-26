@@ -1,0 +1,179 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background-color: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid #E5E5E5;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+}
+
+.logoContainer {
+  display: flex;
+  align-items: center;
+  z-index: 51;
+}
+
+.logo {
+  font-family: var(--font-heading);
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--color-matte-black);
+  letter-spacing: -0.02em;
+}
+
+.nav {
+  display: none;
+  align-items: center;
+  gap: 2rem;
+}
+
+/* Mobile Nav styles */
+.navOpen {
+  display: flex;
+  flex-direction: column;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  padding: 2rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid #E5E5E5;
+  align-items: flex-start;
+  gap: 1.5rem;
+  z-index: 49;
+}
+
+.mobileActions {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding-top: 1rem;
+  border-top: 1px solid #E5E5E5;
+  margin-top: 1rem;
+}
+
+.loginBtnMobile {
+  width: 100%;
+  justify-content: center;
+}
+
+@media (min-width: 768px) {
+  .nav {
+    display: flex;
+  }
+  .navOpen {
+    position: static;
+    flex-direction: row;
+    background: transparent;
+    padding: 0;
+    box-shadow: none;
+    border-bottom: none;
+    align-items: center;
+    gap: 2rem;
+  }
+  .mobileActions {
+    display: none;
+  }
+}
+
+.navLink {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #525252;
+  transition: color 0.2s;
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .navLink {
+    width: auto;
+  }
+}
+
+.navLink:hover {
+  color: var(--color-matte-black);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  z-index: 51;
+}
+
+.loginBtn {
+  display: none;
+}
+
+.hamburger {
+  display: flex;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  color: var(--color-matte-black);
+}
+
+@media (min-width: 640px) {
+  .loginBtn {
+    display: inline-flex;
+  }
+}
+
+@media (min-width: 768px) {
+  .hamburger {
+    display: none;
+  }
+}
+
+/* Cart Icon Styles */
+.cartIconWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-primary);
+  transition: color 0.2s;
+  padding: 0.5rem;
+  border-radius: 50%;
+}
+
+.cartIconWrapper:hover {
+  color: var(--color-accent-green);
+  background: rgba(52, 168, 83, 0.05);
+}
+
+.cartBadge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: var(--color-accent-green);
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  min-width: 18px;
+  height: 18px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  transform: translate(25%, -25%);
+  border: 2px solid white;
+}
+
+.bookRepairWrapper {
+  display: inline-block;
+}

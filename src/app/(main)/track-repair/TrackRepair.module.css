@@ -1,0 +1,158 @@
+.page {
+  padding: 6rem 1.5rem;
+  background-color: var(--color-light-gray);
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 1rem;
+}
+
+.subtitle {
+  color: #525252;
+  font-size: 1.125rem;
+}
+
+.trackCard {
+  padding: 2rem;
+}
+
+@media (min-width: 640px) {
+  .trackCard {
+    padding: 3rem;
+  }
+}
+
+.form {
+  margin-bottom: 3rem;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .inputGroup {
+    flex-direction: row;
+  }
+  .inputGroup > :first-child {
+    flex: 1;
+  }
+}
+
+.result {
+  border-top: 1px solid #E5E5E5;
+  padding-top: 2rem;
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background-color: rgba(22, 163, 74, 0.1);
+  color: var(--color-accent-green);
+  padding: 0.5rem 1rem;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+}
+
+.statusDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--color-accent-green);
+}
+
+.deviceInfo {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.updateText {
+  color: #525252;
+  margin-bottom: 2.5rem;
+}
+
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  position: relative;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 7px;
+  width: 2px;
+  background-color: #E5E5E5;
+  z-index: 0;
+}
+
+.timelineStep {
+  display: flex;
+  gap: 1.5rem;
+  position: relative;
+  z-index: 1;
+}
+
+.stepIndicator {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background-color: var(--color-white);
+  border: 2px solid #E5E5E5;
+  flex-shrink: 0;
+  margin-top: 0.25rem;
+}
+
+.completed .stepIndicator {
+  background-color: var(--color-accent-green);
+  border-color: var(--color-accent-green);
+}
+
+.active .stepIndicator {
+  border-color: var(--color-accent-green);
+  border-width: 4px;
+}
+
+.stepContent h4 {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  color: #A3A3A3;
+}
+
+.stepContent p {
+  font-size: 0.875rem;
+  color: #A3A3A3;
+}
+
+.completed .stepContent h4,
+.active .stepContent h4 {
+  color: var(--color-matte-black);
+}
+
+.completed .stepContent p,
+.active .stepContent p {
+  color: #525252;
+}

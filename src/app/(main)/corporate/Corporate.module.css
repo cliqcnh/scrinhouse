@@ -1,0 +1,106 @@
+.page {
+  padding: 6rem 1.5rem;
+  background-color: var(--color-white);
+  min-height: 100vh;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 5rem;
+  padding: 4rem 2rem;
+  background-color: var(--color-light-gray);
+  border-radius: 24px;
+}
+
+.title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 1rem;
+}
+
+@media (min-width: 768px) {
+  .title { font-size: 3.5rem; }
+}
+
+.subtitle {
+  color: #525252;
+  font-size: 1.25rem;
+  max-width: 600px;
+  margin: 0 auto 2rem auto;
+}
+
+.ctaBtn {
+  font-size: 1.125rem;
+  padding: 1rem 2rem;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  margin-bottom: 5rem;
+}
+
+@media (min-width: 768px) {
+  .grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.featureCard {
+  padding: 2.5rem 2rem;
+  text-align: center;
+}
+
+.iconWrapper {
+  width: 64px;
+  height: 64px;
+  background-color: rgba(22, 163, 74, 0.1);
+  color: var(--color-accent-green);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1.5rem auto;
+}
+
+.iconWrapper svg {
+  width: 32px;
+  height: 32px;
+}
+
+.featureCard h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+.featureCard p {
+  color: #525252;
+  line-height: 1.6;
+}
+
+.contactSection {
+  text-align: center;
+  padding: 4rem 2rem;
+  border-top: 1px solid #E5E5E5;
+}
+
+.contactSection h2 {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  letter-spacing: -0.02em;
+}
+
+.contactSection p {
+  color: #525252;
+  font-size: 1.125rem;
+  margin-bottom: 2rem;
+}

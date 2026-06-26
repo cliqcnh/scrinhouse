@@ -1,0 +1,60 @@
+.authCard {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 3rem 2rem;
+}
+
+.header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.02em;
+}
+
+.subtitle {
+  color: #525252;
+  font-size: 1rem;
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-matte-black);
+}
+
+.submitBtn {
+  width: 100%;
+  padding: 1rem;
+  font-size: 1rem;
+}
+
+.resendBtn {
+  background: none;
+  border: none;
+  color: #525252;
+  font-size: 0.875rem;
+  cursor: pointer;
+  margin-top: 0.5rem;
+  text-decoration: underline;
+}
+
+.resendBtn:hover {
+  color: var(--color-matte-black);
+}
