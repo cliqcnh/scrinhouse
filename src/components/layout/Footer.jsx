@@ -15,9 +15,8 @@ export default function Footer() {
           
           <div className={styles.linkGroup}>
             <h3 className={styles.groupTitle}>Services</h3>
-            <Link href="/shop" className={styles.link}>Shop Screens</Link>
+            <Link href="/shop" className={styles.link}>Shop</Link>
             <Link href="/repair-booking" className={styles.link}>Book a Repair</Link>
-            <Link href="/track-repair" className={styles.link}>Track Repair</Link>
             <Link href="/corporate" className={styles.link}>Corporate Services</Link>
           </div>
 

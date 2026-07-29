@@ -14,7 +14,7 @@ export default function HeroSection() {
           </p>
           <div className={styles.actions}>
             <Link href="/shop" style={{ flex: 1, display: 'flex' }}>
-              <Button variant="primary" className={styles.actionBtn}>Shop Screens</Button>
+              <Button variant="primary" className={styles.actionBtn}>Shop</Button>
             </Link>
             <Link href="/repair-booking" style={{ flex: 1, display: 'flex' }}>
               <Button variant="secondary" className={styles.actionBtn}>Book a Repair</Button>

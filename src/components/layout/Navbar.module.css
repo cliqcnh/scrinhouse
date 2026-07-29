@@ -2,10 +2,10 @@
   position: sticky;
   top: 0;
   z-index: 50;
-  background-color: rgba(255, 255, 255, 0.8);
+  background-color: var(--navbar-background);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid #E5E5E5;
+  border-bottom: 1px solid var(--border-color);
 }
 
 .container {
@@ -46,10 +46,10 @@
   top: 100%;
   left: 0;
   right: 0;
-  background: white;
+  background: var(--background);
   padding: 2rem;
   box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-  border-bottom: 1px solid #E5E5E5;
+  border-bottom: 1px solid var(--border-color);
   align-items: flex-start;
   gap: 1.5rem;
   z-index: 49;
@@ -60,7 +60,7 @@
   flex-direction: column;
   width: 100%;
   padding-top: 1rem;
-  border-top: 1px solid #E5E5E5;
+  border-top: 1px solid var(--border-color);
   margin-top: 1rem;
 }
 
@@ -91,7 +91,7 @@
 .navLink {
   font-size: 0.875rem;
   font-weight: 500;
-  color: #525252;
+  color: var(--muted-text);
   transition: color 0.2s;
   width: 100%;
 }
@@ -177,3 +177,25 @@
 .bookRepairWrapper {
   display: inline-block;
 }
+
+.bookRepairBtn {
+  font-size: 0.75rem !important;
+  padding: 0.4rem 0.85rem !important;
+  height: auto !important;
+  min-height: 0 !important;
+}
+
+@media (min-width: 480px) {
+  .bookRepairBtn {
+    font-size: 0.85rem !important;
+    padding: 0.5rem 1.15rem !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .bookRepairBtn {
+    font-size: 0.95rem !important;
+    padding: 0.65rem 1.4rem !important;
+  }
+}
+

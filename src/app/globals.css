@@ -3,7 +3,7 @@
   --foreground: #111111;
   --color-matte-black: #111111;
   --color-white: #FFFFFF;
-  --color-light-gray: #F5F5F5;
+  --color-light-gray: #F9FAFB;
   --color-accent-green: #16A34A;
   
   --font-body: var(--font-inter), sans-serif;
@@ -13,6 +13,8 @@
 html {
   height: 100%;
 }
+
+
 
 html,
 body {

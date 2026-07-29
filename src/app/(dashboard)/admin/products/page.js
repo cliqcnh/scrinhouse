@@ -11,6 +11,7 @@ export default function AdminProducts() {
   const [showForm, setShowForm] = useState(false);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Form State
   const [name, setName] = useState('');
@@ -179,44 +180,86 @@ export default function AdminProducts() {
         </Card>
       )}
 
-      <Card className={styles.card}>
-        <table className={styles.table}>
-          <thead>
-            <tr>
-              <th>Product Name</th>
-              <th>Category</th>
-              <th>Price</th>
-              <th>Stock</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr><td colSpan="5" style={{ textAlign: 'center' }}>Loading products...</td></tr>
-            ) : products.length === 0 ? (
-              <tr><td colSpan="5" style={{ textAlign: 'center' }}>No products found.</td></tr>
-            ) : (
-              products.map((prod) => (
-                <tr key={prod.id}>
-                  <td>{prod.name}</td>
-                  <td>{prod.category}</td>
-                  <td>GHS {prod.price.toLocaleString()}</td>
-                  <td>{prod.stock}</td>
-                  <td>
-                    {prod.stock > 5 ? (
-                      <span className={styles.badge}>In Stock</span>
-                    ) : prod.stock > 0 ? (
-                      <span className={`${styles.badge} ${styles.badgeWarning}`}>Low Stock</span>
-                    ) : (
-                      <span className={`${styles.badge} ${styles.badgeError}`}>Out of Stock</span>
-                    )}
-                  </td>
+      <div className={styles.toolbar} style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem' }}>
+        <input 
+          type="text" 
+          className={styles.searchInput} 
+          placeholder="Search products by name or category..." 
+          value={searchQuery} 
+          onChange={e => setSearchQuery(e.target.value)} 
+          style={{ flex: 1, maxWidth: '400px' }}
+        />
+      </div>
+
+      {loading ? (
+        <Card className={styles.card}>
+          <div style={{ textAlign: 'center', padding: '2rem' }}>Loading products...</div>
+        </Card>
+      ) : (() => {
+        const filteredProducts = products.filter(p => {
+          const term = searchQuery.toLowerCase();
+          return (
+            (p.name || '').toLowerCase().includes(term) ||
+            (p.category || '').toLowerCase().includes(term)
+          );
+        });
+
+        const groupedProducts = filteredProducts.reduce((acc, prod) => {
+          const cat = prod.category || 'Uncategorized';
+          if (!acc[cat]) {
+            acc[cat] = [];
+          }
+          acc[cat].push(prod);
+          return acc;
+        }, {});
+
+        if (Object.keys(groupedProducts).length === 0) {
+          return (
+            <Card className={styles.card}>
+              <div style={{ textAlign: 'center', padding: '2rem' }}>No products found matching your search.</div>
+            </Card>
+          );
+        }
+
+        return Object.entries(groupedProducts).map(([catName, catProducts]) => (
+          <Card key={catName} className={styles.card} style={{ marginBottom: '2rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', borderBottom: '1px solid #f3f4f6', paddingBottom: '0.75rem' }}>
+              <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: '#111' }}>{catName}</h3>
+              <span className={styles.badge} style={{ backgroundColor: '#f3f4f6', color: '#4b5563' }}>
+                {catProducts.length} {catProducts.length === 1 ? 'item' : 'items'}
+              </span>
+            </div>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>Product Name</th>
+                  <th>Price</th>
+                  <th>Stock</th>
+                  <th>Status</th>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </Card>
+              </thead>
+              <tbody>
+                {catProducts.map((prod) => (
+                  <tr key={prod.id}>
+                    <td style={{ fontWeight: 500 }}>{prod.name}</td>
+                    <td>GHS {prod.price.toLocaleString()}</td>
+                    <td>{prod.stock}</td>
+                    <td>
+                      {prod.stock > 5 ? (
+                        <span className={styles.badge}>In Stock</span>
+                      ) : prod.stock > 0 ? (
+                        <span className={`${styles.badge} ${styles.badgeWarning}`}>Low Stock</span>
+                      ) : (
+                        <span className={`${styles.badge} ${styles.badgeError}`}>Out of Stock</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Card>
+        ));
+      })()}
     </div>
   );
 }

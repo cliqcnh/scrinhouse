@@ -1,6 +1,6 @@
 "use client";
-import { useState, useEffect } from 'react';
-import { collection, getDocs, onSnapshot } from 'firebase/firestore';
+import { useState, useEffect, useRef } from 'react';
+import { collection, getDocs, onSnapshot, query, orderBy, doc, addDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '@/lib/firebase/config';
 import Card from '@/components/ui/Card';
 import Link from 'next/link';
@@ -15,6 +15,38 @@ export default function AdminOverview() {
   });
   
   const [recentRepairs, setRecentRepairs] = useState([]);
+  const [enquiries, setEnquiries] = useState([]);
+  const [selectedEnquiry, setSelectedEnquiry] = useState(null);
+  const [enquiryMessages, setEnquiryMessages] = useState([]);
+  const [adminReply, setAdminReply] = useState('');
+  const messagesEndRef = useRef(null);
+
+  // Listen to messages of selected enquiry
+  useEffect(() => {
+    if (!selectedEnquiry) {
+      setEnquiryMessages([]);
+      return;
+    }
+
+    if (selectedEnquiry.unreadCount > 0) {
+      updateDoc(doc(db, 'enquiries', selectedEnquiry.id), {
+        unreadCount: 0
+      }).catch(err => console.error("Error resetting unread count:", err));
+    }
+
+    const unsub = onSnapshot(
+      query(collection(db, 'enquiries', selectedEnquiry.id, 'messages'), orderBy('createdAt', 'asc')),
+      (snap) => {
+        setEnquiryMessages(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+        setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 100);
+      },
+      (err) => {
+        console.error("Error listening to enquiry messages:", err);
+      }
+    );
+
+    return () => unsub();
+  }, [selectedEnquiry]);
 
   useEffect(() => {
     // Fetch Products count
@@ -45,12 +77,50 @@ export default function AdminOverview() {
       setStats(prev => ({ ...prev, totalOrders: snap.size, revenue }));
     });
 
+    // Fetch Enquiries
+    const unsubscribeEnquiries = onSnapshot(
+      query(collection(db, 'enquiries'), orderBy('lastMessageAt', 'desc')),
+      (snap) => {
+        setEnquiries(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      },
+      (err) => {
+        console.error("Error fetching enquiries:", err);
+      }
+    );
+
     return () => {
       unsubscribeProducts();
       unsubscribeRepairs();
       unsubscribeOrders();
+      unsubscribeEnquiries();
     };
   }, []);
+
+  const handleSendAdminReply = async (e) => {
+    e.preventDefault();
+    if (!adminReply.trim() || !selectedEnquiry) return;
+
+    const replyText = adminReply.trim();
+    setAdminReply('');
+
+    try {
+      await addDoc(collection(db, 'enquiries', selectedEnquiry.id, 'messages'), {
+        text: replyText,
+        sender: 'admin',
+        senderName: 'ScrinHouse Support',
+        createdAt: serverTimestamp()
+      });
+
+      await updateDoc(doc(db, 'enquiries', selectedEnquiry.id), {
+        lastMessage: replyText,
+        lastMessageAt: serverTimestamp(),
+        status: 'replied'
+      });
+    } catch (err) {
+      console.error("Error sending admin reply:", err);
+      alert("Failed to send message. Please try again.");
+    }
+  };
 
   return (
     <div>
@@ -120,6 +190,162 @@ export default function AdminOverview() {
             </tbody>
           </table>
         </Card>
+      </div>
+
+      <div className={styles.dashboardSection} style={{ marginTop: '3rem' }}>
+        <h2 className={styles.sectionTitle}>Product Enquiries</h2>
+        <div style={{ display: 'flex', gap: '1.5rem', height: '500px' }}>
+          {/* Enquiries List */}
+          <div className={styles.card} style={{ width: '320px', flexShrink: 0, padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid #E5E7EB', fontWeight: 700, fontSize: '0.9rem', backgroundColor: '#F9FAFB' }}>
+              Customer Enquiries ({enquiries.length})
+            </div>
+            <div style={{ flex: 1, overflowY: 'auto' }}>
+              {enquiries.length === 0 ? (
+                <div style={{ padding: '3rem 1.5rem', textAlign: 'center', color: '#9CA3AF', fontSize: '0.85rem' }}>
+                  No enquiries yet. Product enquiries from customers will appear here.
+                </div>
+              ) : (
+                enquiries.map((enq) => {
+                  const isSelected = selectedEnquiry?.id === enq.id;
+                  const hasUnread = enq.unreadCount > 0;
+                  return (
+                    <div
+                      key={enq.id}
+                      onClick={() => setSelectedEnquiry(enq)}
+                      style={{
+                        padding: '1rem 1.25rem',
+                        cursor: 'pointer',
+                        borderBottom: '1px solid #F3F4F6',
+                        backgroundColor: isSelected ? '#F3F4F6' : 'transparent',
+                        borderLeft: hasUnread ? '4px solid var(--color-accent-green)' : '4px solid transparent',
+                        transition: 'all 0.15s'
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.25rem' }}>
+                        <span style={{ fontWeight: 700, fontSize: '0.875rem', color: '#111' }}>{enq.customerName}</span>
+                        <span style={{ fontSize: '0.7rem', color: '#9CA3AF' }}>
+                          {enq.lastMessageAt?.seconds ? new Date(enq.lastMessageAt.seconds * 1000).toLocaleDateString([], { month: 'short', day: 'numeric' }) : ''}
+                        </span>
+                      </div>
+                      <div style={{ fontWeight: 600, fontSize: '0.75rem', color: 'var(--color-accent-green)', marginBottom: '0.25rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        📦 {enq.productName}
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <span style={{ fontSize: '0.8rem', color: hasUnread ? '#111' : '#6B7280', fontWeight: hasUnread ? 600 : 400, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '180px' }}>
+                          {enq.lastMessage}
+                        </span>
+                        {hasUnread && (
+                          <span style={{ backgroundColor: '#EF4444', color: '#fff', fontSize: '0.65rem', fontWeight: 700, padding: '0.1rem 0.4rem', borderRadius: '9999px' }}>
+                            New
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </div>
+
+          {/* Enquiries Chat Box */}
+          <div className={styles.card} style={{ flex: 1, padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+            {!selectedEnquiry ? (
+              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9CA3AF' }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '3rem', marginBottom: '1rem' }}>💬</div>
+                  <p style={{ fontWeight: 600, color: '#4B5563' }}>Select a customer enquiry</p>
+                  <p style={{ fontSize: '0.85rem' }}>Choose an enquiry thread from the left pane to start chatting.</p>
+                </div>
+              </div>
+            ) : (
+              <>
+                {/* Chat Box Header */}
+                <div style={{ padding: '1rem 1.5rem', borderBottom: '1px solid #E5E7EB', display: 'flex', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#F9FAFB' }}>
+                  <div>
+                    <h3 style={{ fontWeight: 700, fontSize: '0.95rem', color: '#111', margin: 0 }}>
+                      {selectedEnquiry.customerName}
+                    </h3>
+                    <p style={{ fontSize: '0.75rem', color: '#6B7280', margin: '0.2rem 0 0 0' }}>
+                      Contact: {selectedEnquiry.customerContact}
+                    </p>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <Link
+                      href={`/product/${selectedEnquiry.productId}`}
+                      target="_blank"
+                      style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--color-accent-green)', textDecoration: 'none' }}
+                    >
+                      View Product Page ↗
+                    </Link>
+                    <p style={{ fontSize: '0.75rem', color: '#9CA3AF', margin: '0.2rem 0 0 0' }}>
+                      Product: {selectedEnquiry.productName}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Messages List */}
+                <div style={{ flex: 1, overflowY: 'auto', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', backgroundColor: '#FAFAFA' }}>
+                  {enquiryMessages.length === 0 ? (
+                    <div style={{ textAlign: 'center', color: '#9CA3AF', padding: '2rem', fontSize: '0.85rem' }}>No messages yet</div>
+                  ) : (
+                    enquiryMessages.map((m) => {
+                      const isAdmin = m.sender === 'admin';
+                      return (
+                        <div key={m.id} style={{ display: 'flex', justifyContent: isAdmin ? 'flex-end' : 'flex-start' }}>
+                          <div style={{
+                            maxWidth: '70%',
+                            padding: '0.75rem 1rem',
+                            borderRadius: '12px',
+                            fontSize: '0.875rem',
+                            backgroundColor: isAdmin ? '#111' : '#fff',
+                            color: isAdmin ? '#fff' : '#374151',
+                            border: isAdmin ? 'none' : '1px solid #E5E7EB',
+                            boxShadow: isAdmin ? 'none' : '0 2px 4px rgba(0,0,0,0.02)'
+                          }}>
+                            <div style={{ wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>{m.text}</div>
+                            <div style={{ fontSize: '0.65rem', marginTop: '0.3rem', opacity: 0.6, textAlign: 'right' }}>
+                              {m.createdAt?.toDate ? m.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : ''}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                  <div ref={messagesEndRef} />
+                </div>
+
+                {/* Message Input Box */}
+                <form onSubmit={handleSendAdminReply} style={{ padding: '1rem 1.5rem', borderTop: '1px solid #E5E7EB', display: 'flex', gap: '0.75rem', backgroundColor: '#fff' }}>
+                  <input
+                    className={styles.formInput}
+                    style={{ flex: 1, borderRadius: '8px', padding: '0.625rem 0.875rem', border: '1px solid #D1D5DB' }}
+                    placeholder={`Reply to ${selectedEnquiry.customerName}...`}
+                    value={adminReply}
+                    onChange={(e) => setAdminReply(e.target.value)}
+                    required
+                  />
+                  <button
+                    type="submit"
+                    style={{
+                      backgroundColor: '#111',
+                      color: '#fff',
+                      border: 'none',
+                      padding: '0.625rem 1.25rem',
+                      borderRadius: '8px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      fontSize: '0.875rem',
+                      transition: 'background-color 0.2s'
+                    }}
+                  >
+                    Send
+                  </button>
+                </form>
+              </>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

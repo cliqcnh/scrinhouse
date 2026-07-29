@@ -1,24 +1,24 @@
 "use client";
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import Button from '../ui/Button';
 import styles from './Navbar.module.css';
 import { useCart } from '@/lib/context/CartContext';
-import { auth } from '@/lib/firebase/config';
+import { useAuth } from '@/lib/auth/AuthProvider';
+import { getDashboardPath } from '@/lib/auth/roles';
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [user, setUser] = useState(null);
+  const { user, role } = useAuth();
   const { cartItemCount, isLoaded } = useCart();
 
-  useEffect(() => {
-    import('firebase/auth').then(({ onAuthStateChanged }) => {
-      const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-        setUser(currentUser);
-      });
-      return () => unsubscribe();
-    });
-  }, []);
+  const dashboardPath = getDashboardPath(role);
+  const dashboardLabel = role === 'admin' ? 'Admin Dashboard' : role === 'technician' ? 'Tech Dashboard' : role === 'rider' ? 'Rider Dashboard' : 'My Account';
+  // Logged-in customers go straight to the account booking flow
+  const bookingPath = user && (role === 'customer' || role === 'business_customer' || !role)
+    ? '/account/repairs/book'
+    : '/repair-booking';
+
 
   return (
     <header className={styles.header}>
@@ -30,14 +30,15 @@ export default function Navbar() {
         </div>
         
         <nav className={`${styles.nav} ${isMobileMenuOpen ? styles.navOpen : ''}`}>
-          <Link href="/shop" className={styles.navLink} onClick={() => setIsMobileMenuOpen(false)}>Shop Screens</Link>
+          <Link href="/shop" className={styles.navLink} onClick={() => setIsMobileMenuOpen(false)}>Shop</Link>
           <Link href="/repair-booking" className={styles.navLink} onClick={() => setIsMobileMenuOpen(false)}>Repairs</Link>
-          <Link href="/track-repair" className={styles.navLink} onClick={() => setIsMobileMenuOpen(false)}>Track Repair</Link>
           <Link href="/corporate" className={styles.navLink} onClick={() => setIsMobileMenuOpen(false)}>Corporate</Link>
+          <Link href="/blog" className={styles.navLink} onClick={() => setIsMobileMenuOpen(false)}>Blog</Link>
+
           <div className={styles.mobileActions}>
             {user ? (
-              <Link href="/account" onClick={() => setIsMobileMenuOpen(false)}>
-                <Button variant="outline" className={styles.loginBtnMobile}>My Account</Button>
+              <Link href={dashboardPath} onClick={() => setIsMobileMenuOpen(false)}>
+                <Button variant="outline" className={styles.loginBtnMobile}>{dashboardLabel}</Button>
               </Link>
             ) : (
               <Link href="/account" onClick={() => setIsMobileMenuOpen(false)}>
@@ -49,8 +50,8 @@ export default function Navbar() {
 
         <div className={styles.actions}>
           {user ? (
-            <Link href="/account">
-              <Button variant="outline" className={styles.loginBtn}>My Account</Button>
+            <Link href={dashboardPath}>
+              <Button variant="outline" className={styles.loginBtn}>{dashboardLabel}</Button>
             </Link>
           ) : (
             <Link href="/account">
@@ -69,8 +70,8 @@ export default function Navbar() {
             )}
           </Link>
 
-          <Link href="/repair-booking" className={styles.bookRepairWrapper}>
-            <Button variant="primary">Book Repair</Button>
+          <Link href={bookingPath} className={styles.bookRepairWrapper}>
+            <Button variant="primary" className={styles.bookRepairBtn}>Book Repair</Button>
           </Link>
           <button 
             className={styles.hamburger} 

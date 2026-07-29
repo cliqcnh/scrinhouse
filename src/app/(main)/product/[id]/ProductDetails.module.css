@@ -285,3 +285,275 @@
 .serviceLink:hover {
   text-decoration: underline;
 }
+
+.enquirySection {
+  margin-top: 5rem;
+  padding-top: 4rem;
+  border-top: 1px solid #E5E5E5;
+}
+
+.enquiryHeader {
+  margin-bottom: 2.5rem;
+  text-align: center;
+}
+
+.enquiryTitle {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--color-matte-black);
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.02em;
+}
+
+.enquirySubtitle {
+  font-size: 1rem;
+  color: #737373;
+}
+
+.enquiryCard {
+  background-color: var(--color-white);
+  border: 1px solid #E5E5E5;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.03);
+  overflow: hidden;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.chatPlaceholder {
+  padding: 4rem;
+  text-align: center;
+  color: #737373;
+  font-weight: 500;
+}
+
+/* Chat container styles */
+.chatContainer {
+  display: flex;
+  flex-direction: column;
+  height: 500px;
+}
+
+.chatHeader {
+  background-color: var(--color-light-gray);
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #E5E5E5;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.chatInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.chatStatusDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: var(--color-accent-green);
+  box-shadow: 0 0 8px var(--color-accent-green);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(0.9); opacity: 0.6; }
+  50% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(0.9); opacity: 0.6; }
+}
+
+.chatOnlineText {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--color-matte-black);
+}
+
+.chatProductLabel {
+  font-size: 0.8rem;
+  color: #737373;
+  background-color: rgba(0, 0, 0, 0.05);
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-weight: 500;
+}
+
+.messageList {
+  flex: 1;
+  overflow-y: auto;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  background-color: #FAFAFA;
+}
+
+.emptyMessages {
+  margin: auto;
+  color: #a3a3a3;
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.messageWrapper {
+  display: flex;
+  width: 100%;
+}
+
+.customerMessageWrapper {
+  justify-content: flex-end;
+}
+
+.adminMessageWrapper {
+  justify-content: flex-start;
+}
+
+.messageBubble {
+  max-width: 75%;
+  padding: 0.85rem 1.15rem;
+  border-radius: 16px;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+}
+
+.customerBubble {
+  background-color: var(--color-matte-black);
+  color: var(--color-white);
+  border-bottom-right-radius: 4px;
+}
+
+.adminBubble {
+  background-color: var(--color-white);
+  color: #262626;
+  border: 1px solid #E5E5E5;
+  border-bottom-left-radius: 4px;
+}
+
+.messageText {
+  font-size: 0.95rem;
+  line-height: 1.5;
+  margin: 0;
+  word-break: break-word;
+}
+
+.messageTime {
+  display: block;
+  font-size: 0.7rem;
+  margin-top: 0.35rem;
+  opacity: 0.6;
+  text-align: right;
+}
+
+.chatInputForm {
+  padding: 1.25rem;
+  border-top: 1px solid #E5E5E5;
+  background-color: var(--color-white);
+  display: flex;
+  gap: 0.75rem;
+}
+
+.chatInput {
+  flex: 1;
+  padding: 0.85rem 1.25rem;
+  border: 1px solid #E5E5E5;
+  border-radius: 12px;
+  outline: none;
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.chatInput:focus {
+  border-color: var(--color-matte-black);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
+}
+
+.chatSendBtn {
+  background-color: var(--color-matte-black);
+  color: var(--color-white);
+  border: none;
+  padding: 0 1.5rem;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.chatSendBtn:hover {
+  background-color: #262626;
+}
+
+/* Initial form styles */
+.initialForm {
+  padding: 2.5rem;
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+}
+
+@media (min-width: 640px) {
+  .formRow {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.formField {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.formLabel {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--color-matte-black);
+}
+
+.formInput, .formTextarea {
+  padding: 0.85rem 1.15rem;
+  border: 1px solid #E5E5E5;
+  border-radius: 10px;
+  outline: none;
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.formInput:focus, .formTextarea:focus {
+  border-color: var(--color-matte-black);
+  box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
+}
+
+.formTextarea {
+  resize: vertical;
+}
+
+.submitEnquiryBtn {
+  margin-top: 2rem;
+  width: 100%;
+  background-color: var(--color-matte-black);
+  color: var(--color-white);
+  border: none;
+  padding: 1rem;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s, transform 0.1s;
+}
+
+.submitEnquiryBtn:hover {
+  background-color: #262626;
+}
+
+.submitEnquiryBtn:active {
+  transform: scale(0.98);
+}
+

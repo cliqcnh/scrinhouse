@@ -3,16 +3,18 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
-import { doc, getDoc, collection, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db, auth } from '@/lib/firebase/config';
+import { doc, getDoc, collection, addDoc, serverTimestamp, onSnapshot, query, orderBy, where, getDocs, updateDoc, increment } from 'firebase/firestore';
+import { db } from '@/lib/firebase/config';
 import Button from '@/components/ui/Button';
 import styles from './ProductDetails.module.css';
 import { useRouter } from 'next/navigation';
 import { useCart } from '@/lib/context/CartContext';
+import { useAuth } from '@/lib/auth/AuthProvider';
 
 const CheckoutButton = dynamic(() => import('@/components/checkout/CheckoutButton'), { ssr: false });
 
 export default function ProductPage({ params }) {
+  const { user, profile } = useAuth();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [qty, setQty] = useState(1);
@@ -20,20 +22,156 @@ export default function ProductPage({ params }) {
   const router = useRouter();
   const { addToCart } = useCart();
 
-  const [user, setUser] = useState(null);
+  // Enquiry chat states
+  const [enquiryId, setEnquiryId] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [enquiryMsg, setEnquiryMsg] = useState('');
+  const [chatLoading, setChatLoading] = useState(true);
+  const [contactForm, setContactForm] = useState({ name: '', contact: '', message: '' });
 
   useEffect(() => {
     Promise.resolve(params).then(p => setId(p.id));
   }, [params]);
 
+  // Prefill contact form for logged-in users
   useEffect(() => {
-    import('firebase/auth').then(({ onAuthStateChanged }) => {
-      const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-        setUser(currentUser);
+    if (user || profile) {
+      setContactForm({
+        name: profile?.displayName || user?.displayName || '',
+        contact: user?.email || user?.phoneNumber || '',
+        message: ''
       });
-      return () => unsubscribe();
-    });
-  }, []);
+    }
+  }, [user, profile]);
+
+  // Find or listen to existing enquiry chat
+  useEffect(() => {
+    if (!id) return;
+
+    let unsubMessages = () => {};
+
+    async function findOrCreateEnquiry() {
+      setChatLoading(true);
+      let foundEnquiryId = enquiryId;
+
+      if (!foundEnquiryId) {
+        if (user) {
+          try {
+            const q = query(
+              collection(db, 'enquiries'),
+              where('userId', '==', user.uid),
+              where('productId', '==', id)
+            );
+            const snap = await getDocs(q);
+            if (!snap.empty) {
+              foundEnquiryId = snap.docs[0].id;
+              setEnquiryId(foundEnquiryId);
+            }
+          } catch (err) {
+            console.error("Error finding logged-in enquiry:", err);
+          }
+        } else {
+          const storedId = localStorage.getItem(`enquiry_${id}`);
+          if (storedId) {
+            foundEnquiryId = storedId;
+            setEnquiryId(foundEnquiryId);
+          }
+        }
+      }
+
+      if (foundEnquiryId) {
+        // Listen to messages
+        unsubMessages = onSnapshot(
+          query(collection(db, 'enquiries', foundEnquiryId, 'messages'), orderBy('createdAt', 'asc')),
+          (snapshot) => {
+            setMessages(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+            setChatLoading(false);
+          },
+          (err) => {
+            console.error("Error listening to messages:", err);
+            setChatLoading(false);
+          }
+        );
+      } else {
+        setChatLoading(false);
+      }
+    }
+
+    findOrCreateEnquiry();
+
+    return () => {
+      unsubMessages();
+    };
+  }, [id, user, enquiryId]);
+
+  const handleSendEnquiryMessage = async (e) => {
+    e.preventDefault();
+    if (!enquiryMsg.trim() || !enquiryId) return;
+
+    const msgText = enquiryMsg.trim();
+    setEnquiryMsg('');
+
+    try {
+      await addDoc(collection(db, 'enquiries', enquiryId, 'messages'), {
+        text: msgText,
+        sender: 'customer',
+        senderName: profile?.displayName || user?.displayName || 'Customer',
+        createdAt: serverTimestamp()
+      });
+
+      const docRef = doc(db, 'enquiries', enquiryId);
+      await updateDoc(docRef, {
+        lastMessage: msgText,
+        lastMessageAt: serverTimestamp(),
+        status: 'open',
+        unreadCount: increment(1)
+      });
+    } catch (err) {
+      console.error("Error sending enquiry message:", err);
+      alert("Failed to send message. Please try again.");
+    }
+  };
+
+  const handleStartEnquiry = async (e) => {
+    e.preventDefault();
+    if (!contactForm.name.trim() || !contactForm.contact.trim() || !contactForm.message.trim()) return;
+
+    try {
+      setChatLoading(true);
+      
+      const newEnquiryRef = await addDoc(collection(db, 'enquiries'), {
+        productId: product.id,
+        productName: product.name,
+        userId: user?.uid || null,
+        customerName: contactForm.name.trim(),
+        customerContact: contactForm.contact.trim(),
+        lastMessage: contactForm.message.trim(),
+        lastMessageAt: serverTimestamp(),
+        createdAt: serverTimestamp(),
+        status: 'open',
+        unreadCount: 1
+      });
+
+      const newId = newEnquiryRef.id;
+
+      await addDoc(collection(db, 'enquiries', newId, 'messages'), {
+        text: contactForm.message.trim(),
+        sender: 'customer',
+        senderName: contactForm.name.trim(),
+        createdAt: serverTimestamp()
+      });
+
+      if (!user) {
+        localStorage.setItem(`enquiry_${product.id}`, newId);
+      }
+
+      setEnquiryId(newId);
+    } catch (err) {
+      console.error("Error creating enquiry:", err);
+      alert("Failed to start enquiry. Please check your network and try again.");
+      setChatLoading(false);
+    }
+  };
 
   useEffect(() => {
     async function fetchProduct() {
@@ -168,6 +306,105 @@ export default function ProductPage({ params }) {
                 <Link href="/repair-booking" className={styles.serviceLink}>Book Repair</Link>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Product Enquiry Chat Section */}
+        <div className={styles.enquirySection}>
+          <div className={styles.enquiryHeader}>
+            <h2 className={styles.enquiryTitle}>Enquire about this Product</h2>
+            <p className={styles.enquirySubtitle}>Have questions? Ask our support team in real-time about the {product.name}.</p>
+          </div>
+
+          <div className={styles.enquiryCard}>
+            {chatLoading ? (
+              <div className={styles.chatPlaceholder}>Loading chat...</div>
+            ) : enquiryId ? (
+              <div className={styles.chatContainer}>
+                <div className={styles.chatHeader}>
+                  <div className={styles.chatInfo}>
+                    <span className={styles.chatStatusDot}></span>
+                    <span className={styles.chatOnlineText}>ScrinHouse Support</span>
+                  </div>
+                  <span className={styles.chatProductLabel}>Product: {product.name}</span>
+                </div>
+
+                <div className={styles.messageList}>
+                  {messages.length === 0 ? (
+                    <div className={styles.emptyMessages}>No messages yet. Send a message to start chatting!</div>
+                  ) : (
+                    messages.map((msg) => {
+                      const isCustomer = msg.sender === 'customer';
+                      return (
+                        <div key={msg.id} className={`${styles.messageWrapper} ${isCustomer ? styles.customerMessageWrapper : styles.adminMessageWrapper}`}>
+                          <div className={`${styles.messageBubble} ${isCustomer ? styles.customerBubble : styles.adminBubble}`}>
+                            <p className={styles.messageText}>{msg.text}</p>
+                            <span className={styles.messageTime}>
+                              {msg.createdAt?.toDate ? msg.createdAt.toDate().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Sending...'}
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+
+                <form onSubmit={handleSendEnquiryMessage} className={styles.chatInputForm}>
+                  <input
+                    type="text"
+                    className={styles.chatInput}
+                    placeholder="Type your message about this product..."
+                    value={enquiryMsg}
+                    onChange={(e) => setEnquiryMsg(e.target.value)}
+                    required
+                  />
+                  <button type="submit" className={styles.chatSendBtn}>
+                    Send
+                  </button>
+                </form>
+              </div>
+            ) : (
+              <form onSubmit={handleStartEnquiry} className={styles.initialForm}>
+                <div className={styles.formRow}>
+                  <div className={styles.formField}>
+                    <label className={styles.formLabel}>Your Name</label>
+                    <input
+                      type="text"
+                      className={styles.formInput}
+                      placeholder="e.g. John Doe"
+                      value={contactForm.name}
+                      onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
+                      required
+                    />
+                  </div>
+                  <div className={styles.formField}>
+                    <label className={styles.formLabel}>Email or Phone Number</label>
+                    <input
+                      type="text"
+                      className={styles.formInput}
+                      placeholder="e.g. email@example.com or +233..."
+                      value={contactForm.contact}
+                      onChange={(e) => setContactForm({ ...contactForm, contact: e.target.value })}
+                      required
+                    />
+                  </div>
+                </div>
+                <div className={styles.formField} style={{ marginTop: '1.25rem' }}>
+                  <label className={styles.formLabel}>Your Message / Enquiry</label>
+                  <textarea
+                    className={styles.formTextarea}
+                    placeholder="Ask us anything about this product..."
+                    rows={4}
+                    value={contactForm.message}
+                    onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
+                    required
+                  />
+                </div>
+                <button type="submit" className={styles.submitEnquiryBtn}>
+                  Start Conversation
+                </button>
+              </form>
+            )}
           </div>
         </div>
       </div>

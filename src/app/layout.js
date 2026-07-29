@@ -17,15 +17,20 @@ export const metadata = {
 };
 
 import { CartProvider } from "@/lib/context/CartContext";
+import { AuthProvider } from "@/lib/auth/AuthProvider";
 
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className={`${inter.variable} ${manrope.variable}`}>
       <body>
-        <CartProvider>
-          {children}
-        </CartProvider>
+        <AuthProvider>
+          <CartProvider>
+            {children}
+          </CartProvider>
+        </AuthProvider>
       </body>
     </html>
   );
 }
+
+

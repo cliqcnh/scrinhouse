@@ -9,17 +9,14 @@ import Card from "@/components/ui/Card";
 import styles from "./Shop.module.css";
 
 export default function Shop({ searchParams }) {
-  // Read category from URL if present
   const [activeCategory, setActiveCategory] = useState("All");
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
-    // Resolve searchParams (in Next.js 15+ it's a Promise, but in 14 it's an object)
-    // To be safe, we wrap it in a Promise.resolve if it's not already a promise
     Promise.resolve(searchParams).then((params) => {
       if (params?.category) {
-        // Map URL query values to actual categories
         const catMap = {
           'screens': 'Screens',
           'batteries': 'Batteries',
@@ -32,7 +29,6 @@ export default function Shop({ searchParams }) {
   }, [searchParams]);
 
   useEffect(() => {
-    // Use onSnapshot instead of getDocs for real-time updates and faster cached loads
     const unsubscribe = onSnapshot(collection(db, "products"), (snapshot) => {
       const fetchedProducts = snapshot.docs.map(doc => ({
         id: doc.id,
@@ -50,9 +46,20 @@ export default function Shop({ searchParams }) {
 
   const categories = ["All", "Screens", "Batteries", "Cameras", "Charging Ports"];
 
-  const filteredProducts = activeCategory === "All" 
-    ? products 
-    : products.filter(p => p.category === activeCategory);
+  // Filter by category, then by search query
+  const filteredProducts = products
+    .filter(p => activeCategory === "All" || p.category === activeCategory)
+    .filter(p => {
+      if (!search.trim()) return true;
+      const q = search.toLowerCase();
+      return (
+        (p.name || '').toLowerCase().includes(q) ||
+        (p.description || '').toLowerCase().includes(q) ||
+        (p.category || '').toLowerCase().includes(q) ||
+        (p.brand || '').toLowerCase().includes(q) ||
+        (p.model || '').toLowerCase().includes(q)
+      );
+    });
 
   return (
     <div className={styles.page}>
@@ -62,6 +69,27 @@ export default function Shop({ searchParams }) {
           <p className={styles.subtitle}>Quality-tested replacement parts for your devices.</p>
         </header>
 
+        {/* Search Bar */}
+        <div className={styles.searchWrapper}>
+          <svg className={styles.searchIcon} width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          <input
+            type="text"
+            placeholder="Search products by name, model, or brand..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className={styles.searchInput}
+          />
+          {search && (
+            <button className={styles.searchClear} onClick={() => setSearch('')} aria-label="Clear search">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          )}
+        </div>
+
         <div className={styles.layout}>
           {/* Sidebar / Filters */}
           <aside className={styles.sidebar}>
@@ -70,23 +98,13 @@ export default function Shop({ searchParams }) {
               <ul className={styles.filterList}>
                 {categories.map((cat) => (
                   <li key={cat}>
-                    <button 
+                    <button
                       className={`${styles.filterBtn} ${activeCategory === cat ? styles.activeFilter : ''}`}
                       onClick={() => setActiveCategory(cat)}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        padding: '0.5rem 0',
-                        color: activeCategory === cat ? 'var(--color-accent-green)' : '#525252',
-                        fontWeight: activeCategory === cat ? '600' : '400',
-                        cursor: 'pointer',
-                        textAlign: 'left',
-                        width: '100%',
-                        fontSize: '1rem'
-                      }}
                     >
                       {cat}
                     </button>
+
                   </li>
                 ))}
               </ul>
@@ -95,25 +113,41 @@ export default function Shop({ searchParams }) {
 
           {/* Product Grid */}
           <main className={styles.main}>
+            {/* Results info */}
+            {search.trim() && !loading && (
+              <div style={{ marginBottom: '1rem', fontSize: '0.875rem', color: '#6B7280' }}>
+                {filteredProducts.length} result{filteredProducts.length !== 1 ? 's' : ''} for &ldquo;{search}&rdquo;
+                {activeCategory !== 'All' && ` in ${activeCategory}`}
+              </div>
+            )}
+
             {loading ? (
               <div style={{ textAlign: 'center', padding: '4rem 0', color: '#525252' }}>
                 <h3>Loading products...</h3>
               </div>
             ) : filteredProducts.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '4rem 0', color: '#525252' }}>
-                <h3>No products found in this category.</h3>
+                <h3>{search.trim() ? 'No products match your search.' : 'No products found in this category.'}</h3>
+                {search.trim() && (
+                  <button
+                    onClick={() => { setSearch(''); setActiveCategory('All'); }}
+                    style={{ marginTop: '1rem', padding: '0.6rem 1.25rem', background: '#111', color: '#fff', border: 'none', borderRadius: '8px', cursor: 'pointer', fontWeight: 600, fontSize: '0.875rem' }}
+                  >
+                    Clear Filters
+                  </button>
+                )}
               </div>
             ) : (
               <div className={styles.grid}>
                 {filteredProducts.map((product) => {
                   const stockStatus = product.stock > 5 ? 'In Stock' : (product.stock > 0 ? 'Low Stock' : 'Out of Stock');
-                  
+
                   return (
                   <Link href={`/product/${product.id}`} key={product.id} style={{ display: 'block', textDecoration: 'none' }}>
                     <Card hoverable className={styles.productCard}>
                       <div className={styles.imageWrapper}>
-                        <Image 
-                          src={product.imageUrl || '/images/placeholder.png'} 
+                        <Image
+                          src={product.imageUrl || '/images/placeholder.png'}
                           alt={product.name}
                           fill
                           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"

@@ -1,7 +1,10 @@
 "use client";
 import { useState } from 'react';
-import { GoogleAuthProvider, signInWithPopup } from "firebase/auth";
-import { auth } from '@/lib/firebase/config';
+import { useRouter } from 'next/navigation';
+import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { auth, db } from '@/lib/firebase/config';
+import { doc, getDoc } from 'firebase/firestore';
+import { getDashboardPath, isAdminUser, ROLES } from '@/lib/auth/roles';
 import Card from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import styles from './OTPForm.module.css';
@@ -9,21 +12,38 @@ import styles from './OTPForm.module.css';
 export default function OTPForm({ onLoginSuccess }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const router = useRouter();
 
   const handleGoogleSignIn = async () => {
     setError('');
     setLoading(true);
-    
+
     try {
-      sessionStorage.setItem('justLoggedIn', 'true');
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(auth, provider);
-      const user = result.user;
-      onLoginSuccess(user);
+      const firebaseUser = result.user;
+
+      // Determine role: check isAdminUser first, then Firestore
+      let role = ROLES.CUSTOMER;
+      if (isAdminUser(firebaseUser)) {
+        role = ROLES.ADMIN;
+      } else {
+        try {
+          const snap = await getDoc(doc(db, 'users', firebaseUser.uid));
+          if (snap.exists()) role = snap.data().role || ROLES.CUSTOMER;
+        } catch {}
+      }
+
+      onLoginSuccess?.(firebaseUser);
+
+      // Redirect to the correct dashboard
+      router.push(getDashboardPath(role));
     } catch (err) {
       console.error(err);
       if (err.code === 'auth/configuration-not-found' || err.code === 'auth/operation-not-allowed') {
         setError('Google Sign-In is not enabled. Please enable it in your Firebase Console under Authentication > Sign-in method.');
+      } else if (err.code === 'auth/popup-closed-by-user') {
+        setError('Sign-in was cancelled.');
       } else {
         setError('Failed to sign in with Google. Please try again.');
       }
@@ -41,13 +61,17 @@ export default function OTPForm({ onLoginSuccess }) {
         </p>
       </div>
 
-      {error && <div style={{ color: 'red', marginBottom: '1rem', fontSize: '0.875rem', textAlign: 'center' }}>{error}</div>}
+      {error && (
+        <div style={{ color: '#DC2626', marginBottom: '1rem', fontSize: '0.875rem', textAlign: 'center', background: '#FEF2F2', padding: '0.75rem', borderRadius: '8px' }}>
+          {error}
+        </div>
+      )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '2rem' }}>
-        <Button 
-          type="button" 
-          variant="primary" 
-          className={styles.submitBtn} 
+        <Button
+          type="button"
+          variant="primary"
+          className={styles.submitBtn}
           onClick={handleGoogleSignIn}
           disabled={loading}
           style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', backgroundColor: '#fff', color: '#111', border: '1px solid #e5e5e5', boxShadow: '0 1px 2px rgba(0,0,0,0.05)' }}
@@ -58,7 +82,7 @@ export default function OTPForm({ onLoginSuccess }) {
             <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
             <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
           </svg>
-          {loading ? 'Signing in...' : 'Continue with Google'}
+          {loading ? 'Signing in…' : 'Continue with Google'}
         </Button>
       </div>
     </Card>
